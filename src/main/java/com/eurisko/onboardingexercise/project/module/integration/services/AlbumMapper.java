@@ -7,7 +7,7 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;
 
-import java.util.List;
+import java.util.Set;
 
 import static org.mapstruct.ReportingPolicy.WARN;
 
@@ -17,8 +17,8 @@ public interface AlbumMapper {
 
     @Mapping(target = "date",ignore = true)
     Album albumEntity(AlbumResponse response);
-    List<Album> albumToEntity(List<AlbumResponse> response);
+    Set<Album> albumToEntity(Set<AlbumResponse> response);
 
     AlbumResponseDto albumDto(Album albums);
-    List<AlbumResponseDto> albumToDto(List<Album> albums);
+    Set<AlbumResponseDto> albumToDto(Set<Album> albums);
 }

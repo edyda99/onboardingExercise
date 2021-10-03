@@ -31,11 +31,11 @@ public class AlbumsCallImpl implements AlbumsCall {
     private final RestTemplate restTemplate;
 
     @Override
-    public List<AlbumResponseDto> getAllAlbums() {
-        List<Album> list = repo.findAll();
+    public Set<AlbumResponseDto> getAllAlbums() {
+        Set<Album> list = new LinkedHashSet<>(repo.findAll());
         if (list.isEmpty()) {
-            List<AlbumResponse> albums = Arrays.asList(Objects.requireNonNull(restTemplate.getForObject(properties.getBaseUrl() + "/albums", AlbumResponse[].class)));
-            List<Album> albums1 = new ArrayList<>();
+            Set<AlbumResponse> albums = new LinkedHashSet<>(Arrays.asList(Objects.requireNonNull(restTemplate.getForObject(properties.getBaseUrl() + "/albums", AlbumResponse[].class))));
+            Set<Album> albums1 = new LinkedHashSet<>();
             albums.forEach(p -> {
                 Optional<User> user = userRepo.findById(p.getUserId());
                 if (user.isEmpty()) {
@@ -53,9 +53,9 @@ public class AlbumsCallImpl implements AlbumsCall {
     @Override
     @Transactional
     public void fillDb() {
-        List<Album> list = repo.findAll();
+        Set<Album> list = new LinkedHashSet<>(repo.findAll());
         if (list.isEmpty()) {
-            List<AlbumResponse> albums = Arrays.asList(Objects.requireNonNull(restTemplate.getForObject(properties.getBaseUrl() + "/albums", AlbumResponse[].class)));
+            Set<AlbumResponse> albums = new LinkedHashSet<>(Arrays.asList(Objects.requireNonNull(restTemplate.getForObject(properties.getBaseUrl() + "/albums", AlbumResponse[].class))));
             Set<Album> albums1 = new HashSet<>();
             albums.forEach(p -> {
                 Optional<User> user = userRepo.findById(p.getUserId());

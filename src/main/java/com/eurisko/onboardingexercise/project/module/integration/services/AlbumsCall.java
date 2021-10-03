@@ -2,9 +2,9 @@ package com.eurisko.onboardingexercise.project.module.integration.services;
 
 import com.eurisko.onboardingexercise.project.module.core.dto.response.AlbumResponseDto;
 
-import java.util.List;
+import java.util.Set;
 
 public interface AlbumsCall {
-    List<AlbumResponseDto> getAllAlbums();
+    Set<AlbumResponseDto> getAllAlbums();
     void fillDb();
 }

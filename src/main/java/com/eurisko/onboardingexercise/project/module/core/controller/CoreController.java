@@ -9,7 +9,7 @@ import com.eurisko.onboardingexercise.project.module.core.services.CoreServices;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
+import java.util.Set;
 
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
@@ -23,13 +23,13 @@ public class CoreController {
     public UserResponseDto getUserDetails(@RequestParam Long id){return services.getUserDetails(id);}
 
     @GetMapping("/get-all-photos")
-    public List<PhotoResponseDto> getAllPhotos(){return services.getAllPhotos();}
+    public Set<PhotoResponseDto> getAllPhotos(){return services.getAllPhotos();}
 
     @GetMapping("/get-all-albums")
-    public List<AlbumResponseDto> getAllAlbums(){return services.getAllAlbums();}
+    public Set<AlbumResponseDto> getAllAlbums(){return services.getAllAlbums();}
 
     @GetMapping("/get-all-users")
-    public List<UserResponseDto> getAllUsers(){return services.getAllUsers();}
+    public Set<UserResponseDto> getAllUsers(){return services.getAllUsers();}
 
     @PostMapping("/create-photo")
     public void createPhoto(@RequestBody PhotoRequestDto dto){services.createPhoto(dto);}

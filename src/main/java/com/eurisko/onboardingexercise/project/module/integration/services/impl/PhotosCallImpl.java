@@ -30,11 +30,11 @@ public class PhotosCallImpl implements PhotosCall {
     private final AlbumRepo albumRepo;
 
     @Override
-    public List<PhotoResponseDto> getAllPhotos() {
-        List<Photo> list = repo.findAll();
+    public Set<PhotoResponseDto> getAllPhotos() {
+        Set<Photo> list = new LinkedHashSet<>(repo.findAll());
         if(list.isEmpty()) {
-            List<PhotoResponse> photos = Arrays.asList(Objects.requireNonNull(restTemplate.getForObject(properties.getBaseUrl() + "/photos", PhotoResponse[].class)));
-            List<Photo> photos1 = new ArrayList<>();
+            Set<PhotoResponse> photos = new HashSet<>(Arrays.asList(Objects.requireNonNull(restTemplate.getForObject(properties.getBaseUrl() + "/photos", PhotoResponse[].class))));
+            Set<Photo> photos1 = new LinkedHashSet<>();
             photos.forEach(p->{
                 Optional<Album> album = albumRepo.findById(p.getAlbumId());
                 if(album.isEmpty()) {

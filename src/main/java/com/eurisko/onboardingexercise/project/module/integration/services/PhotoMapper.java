@@ -9,7 +9,7 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;
 
-import java.util.List;
+import java.util.Set;
 
 import static org.mapstruct.ReportingPolicy.ERROR;
 
@@ -19,9 +19,9 @@ public interface PhotoMapper {
 
     @Mapping(target = "date",ignore = true)
     Photo photoToEntity(PhotoResponse response);
-    List<Photo> photoToEntity(List<PhotoResponse> response);
+    Set<Photo> photoToEntity(Set<PhotoResponse> response);
 
     PhotoResponseDto photoToDto(Photo response);
     AlbumResponseDto photoToDto(Album album);
-    List<PhotoResponseDto> photoToDto(List<Photo> response);
+    Set<PhotoResponseDto> photoToDto(Set<Photo> response);
 }

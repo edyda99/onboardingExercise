@@ -6,12 +6,12 @@ import com.eurisko.onboardingexercise.project.module.core.dto.response.AlbumResp
 import com.eurisko.onboardingexercise.project.module.core.dto.response.PhotoResponseDto;
 import com.eurisko.onboardingexercise.project.module.core.dto.response.UserResponseDto;
 
-import java.util.List;
+import java.util.Set;
 
 public interface CoreServices {
-    List<PhotoResponseDto> getAllPhotos();
-    List<AlbumResponseDto> getAllAlbums();
-    List<UserResponseDto> getAllUsers();
+    Set<PhotoResponseDto> getAllPhotos();
+    Set<AlbumResponseDto> getAllAlbums();
+    Set<UserResponseDto> getAllUsers();
 
     UserResponseDto getUserDetails(Long id);
 
@@ -23,9 +23,6 @@ public interface CoreServices {
 
     void deletePhoto(Long dto);
     void deleteAlbum(Long dto);
-
-    List<PhotoResponseDto> getPhotosSorted(Long id);
-    List<AlbumResponseDto> getAlbumsSorted(Long id);
 
     void fillDb();
 }

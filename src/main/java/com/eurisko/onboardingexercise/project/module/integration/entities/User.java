@@ -14,24 +14,17 @@ import java.util.HashSet;
 import static javax.persistence.FetchType.EAGER;
 
 @Entity
-@Table(name = "User")
 @Getter
 @Setter
 public class User implements Persistable<Long> {
     @Id
-    @Column(name = "id")
     private Long id;
-    @Column(name = "name")
     private String name;
-    @Column(name = "username")
     private String username;
-    @Column(name = "email")
     private String email;
     @Embedded
     private Address address;
-    @Column(name = "phone")
     private String phone;
-    @Column(name = "website")
     private String website;
     @Embedded
     private Company company;

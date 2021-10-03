@@ -20,10 +20,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.Date;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -42,17 +40,15 @@ public class CoreServicesImpl implements CoreServices {
     private final AlbumMapper albumMapper = AlbumMapper.INSTANCE;
 
     @Override
-    public List<PhotoResponseDto> getAllPhotos() {
-        return photosCall.getAllPhotos();
-    }
+    public Set<PhotoResponseDto> getAllPhotos() {return photosCall.getAllPhotos();}
 
     @Override
-    public List<AlbumResponseDto> getAllAlbums() {
+    public Set<AlbumResponseDto> getAllAlbums() {
         return albumsCall.getAllAlbums();
     }
 
     @Override
-    public List<UserResponseDto> getAllUsers() {
+    public Set<UserResponseDto> getAllUsers() {
         return usersCall.getAllUsers();
     }
 
@@ -64,40 +60,66 @@ public class CoreServicesImpl implements CoreServices {
             throw new DbException("User not found in Db for id: "+id);
         }
         UserResponseDto response = userMapper.userToDto(user.get());
-        response.getAlbums().stream().sorted(Comparator.comparing(AlbumResponseDto::getDate))
-                .forEach(p->p.getPhotos().stream()
-                        .sorted(Comparator.comparing(PhotoResponseDto::getDate)));
+        Set<AlbumResponseDto> albums = response.getAlbums().stream().sorted(Comparator.nullsLast(
+                Comparator.comparing(AlbumResponseDto::getDate))).collect(Collectors.toCollection(LinkedHashSet::new));
+
+                albums.forEach(p->{
+                    Set<PhotoResponseDto> photos = p.getPhotos().stream()
+                            .sorted(Comparator.nullsLast(
+                                    Comparator.comparing(PhotoResponseDto::getDate))).collect(Collectors.toCollection(LinkedHashSet::new));
+                    p.setPhotos(photos);
+                });
+                response.setAlbums(albums);
                 return response;
     }
 
     @Override
     @Transactional
     public void createAlbum(AlbumRequestDto dto) {
+        if(dto.getId() == null) throw new DbException("Please provide an Id");
+        if(dto.getUserId() == null) throw new DbException("Please provide an User Id");
+
         Optional<User> user = userRepo.findById(dto.getUserId());
+        if(user.isEmpty()) throw new DbException("this user with id: " + dto.getUserId() + " doesn't exist");
+
+        Optional<Album> optional = albumRepo.findById(dto.getId());
         Album album = new Album()
                 .setId(dto.getId())
                 .setTitle(dto.getTitle())
-                .setDate(new Date(System.currentTimeMillis()));
-        if (user.isEmpty())
-            log.warn("Album updated with id {} pinned the userId to an invalid user", dto.getUserId());
-        else album.setUser(user.get());
-        albumRepo.save(album);
+                .setDate(new Date(System.currentTimeMillis()))
+                .setUser(user.get());
+
+        optional.ifPresentOrElse(value -> {
+            value = album;
+            albumRepo.save(value);
+        },()->albumRepo.save(album));
     }
 
     @Override
     @Transactional
     public void createPhoto(PhotoRequestDto dto) {
+        if(dto.getId() == null) throw new DbException("Please provide an Id");
+        if(dto.getAlbumId() == null) throw new DbException("Please provide an User Id");
+
         Optional<Album> album = albumRepo.findById(dto.getAlbumId());
+        if (album.isEmpty()){
+            log.warn("Photo updated with id {} pinned the albumId to an invalid album", dto.getAlbumId());
+            throw new DbException("Photo updated with id: " + dto.getAlbumId() + " pinned the albumId to an invalid album");
+        }
+
+        Optional<Photo> optional = photoRepo.findById(dto.getId());
         Photo photo = new Photo()
                 .setId(dto.getId())
                 .setTitle(dto.getTitle())
                 .setThumbnailUrl(dto.getThumbnailUrl())
                 .setUrl(dto.getUrl())
-                .setDate(new Date(System.currentTimeMillis()));
-        if (album.isEmpty())
-            log.warn("Photo updated with id {} pinned the albumId to an invalid album", dto.getAlbumId());
-        else photo.setAlbum(album.get());
-        photoRepo.save(photo);
+                .setDate(new Date(System.currentTimeMillis()))
+                .setAlbum(album.get());
+
+        optional.ifPresentOrElse(value -> {
+            value = photo;
+            photoRepo.save(value);
+        },()->photoRepo.save(photo));
     }
 
     @Override
@@ -156,16 +178,6 @@ public class CoreServicesImpl implements CoreServices {
             photoRepo.deleteAll(p.getPhotos());
             albumRepo.delete(p);
         });
-    }
-
-    @Override
-    public List<PhotoResponseDto> getPhotosSorted(Long id) {
-        return photosCall.getAllPhotos();
-    }
-
-    @Override
-    public List<AlbumResponseDto> getAlbumsSorted(Long id) {
-        return null;
     }
 
     @Override

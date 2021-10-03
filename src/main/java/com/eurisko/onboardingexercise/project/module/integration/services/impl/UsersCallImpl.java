@@ -12,9 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import javax.transaction.Transactional;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -25,11 +23,11 @@ public class UsersCallImpl implements UsersCall {
     private final UserRepo repo;
 
     @Override
-    public List<UserResponseDto> getAllUsers() {
-        List<User> list = repo.findAll();
+    public Set<UserResponseDto> getAllUsers() {
+        Set<User> list = new LinkedHashSet<>(repo.findAll());
         if (list.isEmpty()) {
-            List<UserResponse> users = Arrays.asList(Objects.requireNonNull(restTemplate.getForObject(properties.getBaseUrl() + "/users", UserResponse[].class)));
-            List<User> users1 = mapper.userToEntity(users);
+            Set<UserResponse> users = new LinkedHashSet<>(Arrays.asList(Objects.requireNonNull(restTemplate.getForObject(properties.getBaseUrl() + "/users", UserResponse[].class))));
+            Set<User> users1 = mapper.userToEntity(users);
             repo.saveAll(users1);
             return mapper.userToDto(users1);
         }
@@ -52,10 +50,10 @@ public class UsersCallImpl implements UsersCall {
     @Override
     @Transactional
     public void fillDb() {
-        List<User> list = repo.findAll();
+        Set<User> list = new LinkedHashSet<>(repo.findAll());
         if (list.isEmpty()) {
-            List<UserResponse> users = Arrays.asList(Objects.requireNonNull(restTemplate.getForObject(properties.getBaseUrl() + "/users", UserResponse[].class)));
-            List<User> users1 = mapper.userToEntity(users);
+            Set<UserResponse> users = new LinkedHashSet<>(Arrays.asList(Objects.requireNonNull(restTemplate.getForObject(properties.getBaseUrl() + "/users", UserResponse[].class))));
+            Set<User> users1 = mapper.userToEntity(users);
             repo.saveAll(users1);
         }
     }
