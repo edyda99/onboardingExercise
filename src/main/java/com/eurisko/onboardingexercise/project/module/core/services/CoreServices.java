@@ -5,15 +5,15 @@ import com.eurisko.onboardingexercise.project.module.core.dto.request.PhotoReque
 import com.eurisko.onboardingexercise.project.module.core.dto.response.AlbumResponseDto;
 import com.eurisko.onboardingexercise.project.module.core.dto.response.PhotoResponseDto;
 import com.eurisko.onboardingexercise.project.module.core.dto.response.UserResponseDto;
-
-import java.util.Set;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 public interface CoreServices {
-    Set<PhotoResponseDto> getAllPhotos();
-    Set<AlbumResponseDto> getAllAlbums();
-    Set<UserResponseDto> getAllUsers();
+    Flux<PhotoResponseDto> getAllPhotos();
+    Flux<AlbumResponseDto> getAllAlbums();
+    Flux<UserResponseDto> getAllUsers();
 
-    UserResponseDto getUserDetails(Long id);
+    Mono<UserResponseDto> getUserDetails(Long id);
 
     void createPhoto(PhotoRequestDto dto);
     void createAlbum(AlbumRequestDto dto);
@@ -23,6 +23,6 @@ public interface CoreServices {
 
     void deletePhoto(Long dto);
     void deleteAlbum(Long dto);
-
-    void fillDb();
+//
+//    void fillDb();
 }

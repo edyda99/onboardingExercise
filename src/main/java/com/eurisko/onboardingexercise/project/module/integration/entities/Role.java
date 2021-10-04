@@ -1,20 +1,19 @@
 package com.eurisko.onboardingexercise.project.module.integration.entities;
 
-import lombok.*;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import lombok.experimental.Accessors;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
 
-import javax.persistence.*;
-
-import static javax.persistence.GenerationType.AUTO;
-
-@Entity
+@Document
 @Getter
 @Setter
 @NoArgsConstructor
 @Accessors(chain = true)
 public class Role {
     @Id
-    @GeneratedValue(strategy = AUTO)
     private Long id;
     private String name;
 }

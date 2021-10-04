@@ -2,10 +2,6 @@ package com.eurisko.onboardingexercise.project.module.integration.entities.embed
 
 import lombok.*;
 
-import javax.persistence.Embeddable;
-import javax.persistence.Embedded;
-
-@Embeddable
 @Getter
 @Setter
 @AllArgsConstructor
@@ -15,6 +11,5 @@ public class Address {
     private String suite;
     private String city;
     private String zipcode;
-    @Embedded
     private Geo geo;
 }

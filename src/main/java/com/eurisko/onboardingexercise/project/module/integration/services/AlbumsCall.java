@@ -1,10 +1,11 @@
 package com.eurisko.onboardingexercise.project.module.integration.services;
 
 import com.eurisko.onboardingexercise.project.module.core.dto.response.AlbumResponseDto;
-
-import java.util.Set;
+import reactor.core.publisher.Flux;
 
 public interface AlbumsCall {
-    Set<AlbumResponseDto> getAllAlbums();
+    Flux<AlbumResponseDto> getAllAlbums();
+
     void fillDb();
+//    void fillDb();
 }

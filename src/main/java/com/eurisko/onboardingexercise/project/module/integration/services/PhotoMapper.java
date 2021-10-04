@@ -8,8 +8,7 @@ import com.eurisko.onboardingexercise.project.module.integration.model.response.
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;
-
-import java.util.Set;
+import reactor.core.publisher.Flux;
 
 import static org.mapstruct.ReportingPolicy.ERROR;
 
@@ -19,9 +18,6 @@ public interface PhotoMapper {
 
     @Mapping(target = "date",ignore = true)
     Photo photoToEntity(PhotoResponse response);
-    Set<Photo> photoToEntity(Set<PhotoResponse> response);
 
     PhotoResponseDto photoToDto(Photo response);
-    AlbumResponseDto photoToDto(Album album);
-    Set<PhotoResponseDto> photoToDto(Set<Photo> response);
 }

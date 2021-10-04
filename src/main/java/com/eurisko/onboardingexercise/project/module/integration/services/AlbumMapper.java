@@ -7,8 +7,6 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;
 
-import java.util.Set;
-
 import static org.mapstruct.ReportingPolicy.WARN;
 
 @Mapper(unmappedTargetPolicy = WARN)
@@ -17,8 +15,7 @@ public interface AlbumMapper {
 
     @Mapping(target = "date",ignore = true)
     Album albumEntity(AlbumResponse response);
-    Set<Album> albumToEntity(Set<AlbumResponse> response);
 
+    @Mapping(target = "photos",ignore = true)
     AlbumResponseDto albumDto(Album albums);
-    Set<AlbumResponseDto> albumToDto(Set<Album> albums);
 }

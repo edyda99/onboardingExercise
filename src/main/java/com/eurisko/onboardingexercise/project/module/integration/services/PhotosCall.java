@@ -1,11 +1,11 @@
 package com.eurisko.onboardingexercise.project.module.integration.services;
 
 import com.eurisko.onboardingexercise.project.module.core.dto.response.PhotoResponseDto;
-
-import java.util.Set;
+import reactor.core.publisher.Flux;
 
 
 public interface PhotosCall {
-    Set<PhotoResponseDto> getAllPhotos();
+    Flux<PhotoResponseDto> getAllPhotos();
+
     void fillDb();
 }

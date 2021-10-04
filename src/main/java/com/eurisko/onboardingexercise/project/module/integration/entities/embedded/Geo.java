@@ -2,9 +2,6 @@ package com.eurisko.onboardingexercise.project.module.integration.entities.embed
 
 import lombok.*;
 
-import javax.persistence.Embeddable;
-
-@Embeddable
 @Getter
 @Setter
 @AllArgsConstructor

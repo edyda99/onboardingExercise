@@ -4,31 +4,30 @@ import com.eurisko.onboardingexercise.project.module.integration.entities.embedd
 import com.eurisko.onboardingexercise.project.module.integration.entities.embedded.Company;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.experimental.Accessors;
+import org.springframework.data.annotation.Id;
 import org.springframework.data.domain.Persistable;
+import org.springframework.data.mongodb.core.mapping.Document;
 
-import javax.persistence.*;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 
-import static javax.persistence.FetchType.EAGER;
 
-@Entity
+@Document
 @Getter
 @Setter
+@Accessors(chain = true)
 public class User implements Persistable<Long> {
     @Id
     private Long id;
     private String name;
     private String username;
     private String email;
-    @Embedded
     private Address address;
     private String phone;
     private String website;
-    @Embedded
     private Company company;
-    @OneToMany(orphanRemoval = true,mappedBy = "user"/*{PERSIST,REFRESH}*/,fetch = EAGER)
     //@JoinColumn(name = "userId");
     private Collection<Album> albums = Collections.synchronizedSet(new HashSet<>());
 

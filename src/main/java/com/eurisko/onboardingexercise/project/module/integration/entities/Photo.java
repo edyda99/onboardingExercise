@@ -4,14 +4,14 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.Accessors;
+import org.springframework.data.annotation.Id;
 import org.springframework.data.domain.Persistable;
+import org.springframework.data.mongodb.core.mapping.Document;
 
-import javax.persistence.*;
 import java.sql.Date;
 
-import static javax.persistence.FetchType.EAGER;
 
-@Entity
+@Document
 @Getter
 @Setter
 
@@ -23,15 +23,13 @@ public class Photo  implements Persistable<Long> {
 
     private String title;
 
+    private Long albumId;
+
     private String url;
 
     private String thumbnailUrl;
 
     private Date date;
-
-    @ManyToOne(fetch = EAGER)
-    @JoinColumn(name = "albumId",referencedColumnName = "id")
-    private Album album;
 
     @Override
     public boolean isNew() {

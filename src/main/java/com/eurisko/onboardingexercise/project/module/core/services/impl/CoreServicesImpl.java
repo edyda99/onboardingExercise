@@ -18,9 +18,13 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import java.sql.Date;
-import java.util.*;
+import java.util.Comparator;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -40,37 +44,30 @@ public class CoreServicesImpl implements CoreServices {
     private final AlbumMapper albumMapper = AlbumMapper.INSTANCE;
 
     @Override
-    public Set<PhotoResponseDto> getAllPhotos() {return photosCall.getAllPhotos();}
+    public Flux<PhotoResponseDto> getAllPhotos() {return photosCall.getAllPhotos();}
 
     @Override
-    public Set<AlbumResponseDto> getAllAlbums() {
+    public Flux<AlbumResponseDto> getAllAlbums() {
         return albumsCall.getAllAlbums();
     }
 
     @Override
-    public Set<UserResponseDto> getAllUsers() {
+    public Flux<UserResponseDto> getAllUsers() {
         return usersCall.getAllUsers();
     }
 
     @Override
-    public UserResponseDto getUserDetails(Long id) {
-        Optional<User> user = userRepo.findById(id);
-        if (user.isEmpty()) {
-            log.error("User not found in Db for id: {}", id);
-            throw new DbException("User not found in Db for id: "+id);
-        }
-        UserResponseDto response = userMapper.userToDto(user.get());
-        Set<AlbumResponseDto> albums = response.getAlbums().stream().sorted(Comparator.nullsLast(
-                Comparator.comparing(AlbumResponseDto::getDate))).collect(Collectors.toCollection(LinkedHashSet::new));
+    public Mono<UserResponseDto> getUserDetails(Long id) {
+        Mono<User> user = userRepo.findById(id);
+//        user.switchIfEmpty({
+//            Mono.error(new DbException("User not found in Db"));
+//            return new UserResponseDto();
+//        })
+        Mono<UserResponseDto> response = user.flatMap(p->Mono.just(userMapper.userToDto(p)));
+        response = response.flatMap(p->Mono.just(p.setAlbums(p.getAlbums().stream().sorted(Comparator.nullsLast(
+                Comparator.comparing(AlbumResponseDto::getDate))).collect(Collectors.toList()))));
 
-                albums.forEach(p->{
-                    Set<PhotoResponseDto> photos = p.getPhotos().stream()
-                            .sorted(Comparator.nullsLast(
-                                    Comparator.comparing(PhotoResponseDto::getDate))).collect(Collectors.toCollection(LinkedHashSet::new));
-                    p.setPhotos(photos);
-                });
-                response.setAlbums(albums);
-                return response;
+                    return response;
     }
 
     @Override
@@ -79,20 +76,19 @@ public class CoreServicesImpl implements CoreServices {
         if(dto.getId() == null) throw new DbException("Please provide an Id");
         if(dto.getUserId() == null) throw new DbException("Please provide an User Id");
 
-        Optional<User> user = userRepo.findById(dto.getUserId());
-        if(user.isEmpty()) throw new DbException("this user with id: " + dto.getUserId() + " doesn't exist");
+//        if(user.isEmpty()) throw new DbException("this user with id: " + dto.getUserId() + " doesn't exist");
 
-        Optional<Album> optional = albumRepo.findById(dto.getId());
         Album album = new Album()
+                .setUserId(dto.getUserId())
                 .setId(dto.getId())
                 .setTitle(dto.getTitle())
-                .setDate(new Date(System.currentTimeMillis()))
-                .setUser(user.get());
-
-        optional.ifPresentOrElse(value -> {
-            value = album;
-            albumRepo.save(value);
-        },()->albumRepo.save(album));
+                .setDate(new Date(System.currentTimeMillis()));
+        Mono<User> mono = userRepo.findById(dto.getUserId()).doOnNext(p->{
+            log.info("10452");
+            p.addAlbum(album);
+        });
+        mono.flatMap(userRepo::save);
+        albumRepo.save(album);
     }
 
     @Override
@@ -101,47 +97,50 @@ public class CoreServicesImpl implements CoreServices {
         if(dto.getId() == null) throw new DbException("Please provide an Id");
         if(dto.getAlbumId() == null) throw new DbException("Please provide an User Id");
 
-        Optional<Album> album = albumRepo.findById(dto.getAlbumId());
-        if (album.isEmpty()){
-            log.warn("Photo updated with id {} pinned the albumId to an invalid album", dto.getAlbumId());
-            throw new DbException("Photo updated with id: " + dto.getAlbumId() + " pinned the albumId to an invalid album");
-        }
+        Mono<Album> album = albumRepo.findById(dto.getAlbumId());
+//        if (album.isEmpty()){
+//            log.warn("Photo updated with id {} pinned the albumId to an invalid album", dto.getAlbumId());
+//            throw new DbException("Photo updated with id: " + dto.getAlbumId() + " pinned the albumId to an invalid album");
+//        }
 
-        Optional<Photo> optional = photoRepo.findById(dto.getId());
         Photo photo = new Photo()
                 .setId(dto.getId())
                 .setTitle(dto.getTitle())
                 .setThumbnailUrl(dto.getThumbnailUrl())
                 .setUrl(dto.getUrl())
-                .setDate(new Date(System.currentTimeMillis()))
-                .setAlbum(album.get());
+                .setDate(new Date(System.currentTimeMillis()));
+        album.map(p->p.addPhoto(photo));
 
-        optional.ifPresentOrElse(value -> {
-            value = photo;
-            photoRepo.save(value);
-        },()->photoRepo.save(photo));
+        album.flatMap(albumRepo::save);
+        photoRepo.save(photo);
     }
 
     @Override
     @Transactional
     public void updatePhoto(PhotoRequestDto dto) {
-        Optional<Photo> photo = photoRepo.findById(Objects.requireNonNull(dto.getId()));
-        if (photo.isEmpty()) {
+        Mono<Photo> photo = photoRepo.findById(Objects.requireNonNull(dto.getId()));
+
             log.error("Photo Not Found");
             throw new DbException("Photo not found in the database");
-        }
-        photo.get()
+
+        photo.map(p->p
                 .setId(dto.getId())
                 .setTitle(dto.getTitle())
                 .setUrl(dto.getUrl())
                 .setThumbnailUrl(dto.getThumbnailUrl())
-                .setDate(new Date(System.currentTimeMillis()));
+                .setDate(new Date(System.currentTimeMillis())))
+                .onErrorResume((ex)->{
+                    log.error(ex.getMessage());
+                    throw new DbException("Photo not found in the database" + ex.getMessage());
+                });
 
-        Optional<Album> album = albumRepo.findById(dto.getAlbumId());
-        if (album.isEmpty())
-            log.warn("Photo updated with id {} pinned the albumId to an invalid album", dto.getAlbumId());
-        else photo.get().setAlbum(album.get());
-        photoRepo.save(photo.get());
+        Mono<Album> album = albumRepo.findById(dto.getAlbumId());
+        Mono.zip(photo,album,(photoZ,albumZ)->albumZ.addPhoto(photoZ));
+
+        photo.flatMap(photoRepo::save).onErrorResume(e-> {
+            log.error(e.getMessage());
+           return Mono.error(new DbException("Photo updated with id {} pinned the albumId to an invalid album"));
+        });
     }
 
     @Override
@@ -166,35 +165,36 @@ public class CoreServicesImpl implements CoreServices {
     @Override
     @Transactional
     public void deletePhoto(Long dto) {
-        Optional<Photo> photo = photoRepo.findById(dto);
-        photo.ifPresent(photoRepo::delete);
+        photoRepo.deleteById(dto).onErrorResume(e-> {
+            log.error(e.getMessage());
+            return Mono.error(new DbException(e.getMessage()));
+        });
     }
 
     @Override
     @Transactional
     public void deleteAlbum(Long dto) {
-        Optional<Album> album = albumRepo.findById(dto);
-        album.ifPresent(p->{
-            photoRepo.deleteAll(p.getPhotos());
-            albumRepo.delete(p);
+     albumRepo.deleteById(dto).onErrorResume(e -> {
+            log.error(e.getMessage());
+            return Mono.error(new DbException(e.getMessage()));
         });
     }
-
-    @Override
-    public void fillDb() {
-        usersCall.fillDb();
-        albumsCall.fillDb();
-        photosCall.fillDb();
-        log.info("Finished importing db");
-//        IntStream.range(0, photos.size()).parallel().forEach(p -> {
-//            photos.get(p).getAlbum().getPhotos().add(photos.get(p));
-//            photos.get(p).setAlbum(null);
-//        });
-
-//        IntStream.range(0, albums.size()).parallel().forEach(p -> {
-//            albums.get(p).getUser().getAlbums().add(albums.get(p));
-//            albums.get(p).setUser(null);
-//        });
-
-    }
+//
+//    @Override
+//    public void fillDb() {
+//        photosCall.fillDb();
+//        albumsCall.fillDb();
+//        usersCall.fillDb();
+//        log.info("Finished importing db");
+////        IntStream.range(0, photos.size()).parallel().forEach(p -> {
+////            photos.get(p).getAlbum().getPhotos().add(photos.get(p));
+////            photos.get(p).setAlbum(null);
+////        });
+//
+////        IntStream.range(0, albums.size()).parallel().forEach(p -> {
+////            albums.get(p).getUser().getAlbums().add(albums.get(p));
+////            albums.get(p).setUser(null);
+////        });
+//
+//    }
 }
